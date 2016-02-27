@@ -1,3 +1,6 @@
+/*Test implementation! 
+It uses pthread_key_t to get thread specific element of spinlock*/
+
 #include "MCS_spin.h"
 #include <malloc.h>
 //#include <stdio.h>
