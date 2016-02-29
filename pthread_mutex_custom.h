@@ -6,14 +6,15 @@
 #define FUTEX_PRIVATE_FLAG 128
 #define FUTEX_WAKE 1
 	
-typedef volatile int pthread_mutex_t_c;
+//typedef volatile int pthread_mutex_t_c;
 
-/*typedef struct{
+typedef struct{
 	int __lock;
-} pthread_mutex_t_c;*/
+	int __spins;
+} pthread_mutex_t_c;
 
-extern int pthread_mutex_init_c(pthread_mutex_t_c *mutex, void *attr);
-extern int pthread_mutex_lock_c(pthread_mutex_t_c *mutex);
-extern int pthread_mutex_unlock_c(pthread_mutex_t_c *mutex);
+int pthread_mutex_init_c(pthread_mutex_t_c *mutex, void *attr);
+int pthread_mutex_lock_c(pthread_mutex_t_c *mutex);
+int pthread_mutex_unlock_c(pthread_mutex_t_c *mutex);
 
 #endif

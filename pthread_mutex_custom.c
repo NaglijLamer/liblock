@@ -57,7 +57,8 @@ int pthread_mutex_unlock_c(pthread_mutex_t_c *mutex){
 }
 
 int pthread_mutex_init_c(pthread_mutex_t_c *mutex, void *attr){
-	if (attr != NULL && (*(int*)attr) == 1) *mutex = 1;
-	else *mutex = 0;
+	if (attr != NULL && (*(int*)attr) == 1) mutex->__lock = 1;
+	else mutex->__lock = 0;
+	mutex->__spins = 0;
 	return 0;
 }
