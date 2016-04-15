@@ -28,7 +28,7 @@ int pthread_mutex_lock_c(pthread_mutex_t_c *mutex){
 	"3:"
 	: "=S" (ign0), "=m" (*mutex), "=a" (ign1)
 	: "0" (1), "m" (*mutex), "2" (0)
-	: "cc", "memory");
+	: "cx", "r10", "cc", "memory");
 
 	return 0;
 }

@@ -31,6 +31,12 @@
 	#define custom_lock_unlock MCS_spin_unlock
 	#define custom_lock_init MCS_spin_init
 	#define custom_lock MCS_lock_t
+#elif defined _POSIXSPIN
+	#include <pthread.h>
+	#define custom_lock_lock pthread_spin_lock
+    #define custom_lock_unlock pthread_spin_unlock
+    #define custom_lock_init pthread_spin_init
+    #define custom_lock pthread_spinlock_t
 #else
 	#include <pthread.h>
 	#define custom_lock_lock pthread_mutex_lock
