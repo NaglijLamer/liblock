@@ -4,10 +4,10 @@
 #include "metrics.h"
 #include "global_metric.h"
 
-#define SYS_futex 202
+/*#define SYS_futex 202
 #define FUTEX_WAIT 0
 #define FUTEX_PRIVATE_FLAG 128
-#define FUTEX_WAKE 1
+#define FUTEX_WAKE 1*/
 	
 //typedef volatile int pthread_mutex_t_c;
 
