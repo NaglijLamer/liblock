@@ -13,8 +13,8 @@
 #define SUCCESS 0
 #define ERROR -1
 #define SLEEP_TIME 1000000
-#define SLEEP_TIME_REG 1000000
-#define SLEEP_TIME_REV 1000000
+//#define SLEEP_TIME_REG 1000000
+//#define SLEEP_TIME_REV 1000000
 #define PRINT_INIT 15
 #define error(msg) do\
 	{\
@@ -42,7 +42,14 @@ void *change_reg()
 			*ch = *ch ^ 0x20;
 			ch++;
 		}
+		for (int i = 0; i < SIZE; i++)
+                        printf("%c ", alphabet[i]);
+                printf("%c", '\n');
 		reg++;
+		double m = 1;
+		for (int i = 1; i < 1000000; i++)
+			m *= i;
+		printf("%f\n", m);
 		if (custom_lock_unlock(&lock) != SUCCESS)
                         error("threads6:pthread_mutex_unlock");
 		//usleep(SLEEP_TIME_REG);
@@ -64,7 +71,14 @@ void *change_ord()
 			alphabet[i] = alphabet[SIZE - 1 - i];
 			alphabet[SIZE - 1 - i] = temp;			
 		}
+		for (int i = 0; i < SIZE; i++)
+                        printf("%c ", alphabet[i]);
+                printf("%c", '\n');
 		ord++;
+		double m = 1;
+                for (int i = 1; i < 1000000; i++)
+                        m *= i;
+		printf("%f\n", m);
 		if (custom_lock_unlock(&lock) != SUCCESS)
                         error("threads6:pthread_mutex_unlock");
 		//usleep(SLEEP_TIME_REV);
@@ -80,26 +94,32 @@ int main ()
                 alphabet[i] = ch;
 	if (custom_lock_init(&lock, 0) != SUCCESS)
 		error("threads6:pthread_mutex_init");
+	//fprintf(stderr, "N: %ld\n", lock.__N);
 	if (pthread_create(&regtr, NULL, &change_reg, NULL) != SUCCESS)
 		error("threads6:pthread_create");
 	if (pthread_create(&ordtr, NULL, &change_ord, NULL) != SUCCESS)
 		error("threads6:pthread_create");
+	/*if (pthread_create(&regtr, NULL, &change_reg, NULL) != SUCCESS)
+                error("threads6:pthread_create");
+        if (pthread_create(&ordtr, NULL, &change_ord, NULL) != SUCCESS)
+                error("threads6:pthread_create");*/
 	//while (TRUE)
 	for (int print = 0; print < PRINT_INIT; print++)
 	{
-		if (custom_lock_lock(&lock) != SUCCESS)
+		/*if (custom_lock_lock(&lock) != SUCCESS)
                         error("threads6:pthread_mutex_lock");
 		printf("%d: ", print);
 		for (i = 0; i < SIZE; i++)
 			printf("%c ", alphabet[i]);
 		printf("%c", '\n');
 		if (custom_lock_unlock(&lock) != SUCCESS)
-                        error("threads6:pthread_mutex_unlock");
+                        error("threads6:pthread_mutex_unlock");*/
 		usleep(SLEEP_TIME);
 	}
 	stop = 1;
 	pthread_join(ordtr, NULL);
 	pthread_join(regtr, NULL);
-	printf("Ord = %d\nReg = %d\nTotal lockings = %d\n", ord, reg, ord + reg + PRINT_INIT);
+	//fprintf(stderr, "N: %ld\n", lock.__N);
+	//fprintf(stderr, "Ord = %d\nReg = %d\nTotal lockings = %d\n", ord, reg, ord + reg);
 	return EXIT_SUCCESS;
 }

@@ -1,4 +1,4 @@
-#include "adaptive_mutex.h"
+#include "adaptive_mutex_metric.h"
 
 #define TRYLOCK(futex) \
 	({int ret;	\
@@ -9,11 +9,12 @@
 		: "memory");	\
 	ret;})
 
-int adaptive_mutex_lock(pthread_mutex_t_c *mutex){
+int adaptive_mutex_lock_metric(pthread_mutex_metric_t_c *lock){
+	METRIC_BEFORE_LOCK;
 	int ign0, ign1;
-	if (TRYLOCK(mutex->__lock) != 0){
+	if (TRYLOCK(lock->__lock) != 0){
 		int cnt = 0;
-		int spins = mutex->__spins * 2 + 10;
+		int spins = lock->__spins * 2 + 10;
 		int max_cnt = spins > 100 ? 100 : spins;
 		do{
 			if (cnt++ >= max_cnt){
@@ -36,15 +37,16 @@ int adaptive_mutex_lock(pthread_mutex_t_c *mutex){
         			"testl %%eax, %%eax\n\t"
 				"jnz 1b\n\t"
         			"3:"
-        			: "=S" (ign0), "=m" (*mutex), "=a" (ign1)
-        			: "0" (1), "m" (*mutex), "2" (0), "D" (mutex)
+        			: "=S" (ign0), "=m" (*lock), "=a" (ign1)
+        			: "0" (1), "m" (*lock), "2" (0), "D" (lock)
         			: "cx", "dx", "r11", "cc", "memory");
 				break;
 			}
 		__asm__ ("pause");
-		} while (TRYLOCK(mutex->__lock) != 0);
-		mutex->__spins += (cnt - mutex->__spins) / 8;
+		} while (TRYLOCK(lock->__lock) != 0);
+		lock->__spins += (cnt - lock->__spins) / 8;
 	}
+	METRIC_AFTER_LOCK;
 	return 0;
 }
 

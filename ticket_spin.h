@@ -1,9 +1,16 @@
 #ifndef _TICKET_SPINLOCK_H
 #define _TICKET_SPINLOCK_H
 
-typedef struct{
+//#include "metrics.h"
+
+#ifdef _GLOBAL_TIMER_LOCK
+#include "global_metric.h"
+#endif
+
+typedef volatile struct{
 	int next;
 	int serv;
+	//METRIC_VARS
 }ticket_spinlock_t;
 //typedef volatile int ticket_spinlock_t;
 

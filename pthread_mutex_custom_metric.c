@@ -1,9 +1,11 @@
-#include "pthread_mutex_custom.h"
-#include <stddef.h>
+#include "pthread_mutex_custom_metric.h"
+//#include <stddef.h> 
 
-int pthread_mutex_lock_c(pthread_mutex_t_c *mutex){
+int pthread_mutex_lock_metric_c(pthread_mutex_metric_t_c *lock){
+	METRIC_BEFORE_LOCK;
 	int ign0, ign1;
 	__asm __volatile(
+	//"int $3\n\t"
 
 	"lock; cmpxchgl %3, %1\n\t"
 	"jz 3f\n\t"
@@ -21,8 +23,8 @@ int pthread_mutex_lock_c(pthread_mutex_t_c *mutex){
 	"1:\tmovl $202, %%eax\n\t" //SYS_futex == 202
 	"syscall\n\t"
 #ifdef _DEBUG_LIBLOCK
-	"cmpq $-1, %%rax\n\t"
-	"jne 2f\n\t"
+	"cmpq $0, %%rax\n\t"
+	"je 2f\n\t"
 	"int $3\n\t"
 #endif
 	"2:\tmovl %%edx, %%eax\n\t"
@@ -31,14 +33,16 @@ int pthread_mutex_lock_c(pthread_mutex_t_c *mutex){
 	"jnz 1b\n\t"
 
 	"3:"
-	: "=S" (ign0), "=m" (*mutex), "=a" (ign1)
-	: "0" (1), "m" (*mutex), "2" (0)
+	: "=S" (ign0), "=m" (*lock), "=a" (ign1)
+	: "0" (1), "m" (*lock), "2" (0), "D" (lock)
 	: "cx", "r11", "cc", "memory");
 
+	METRIC_AFTER_LOCK;
 	return 0;
 }
 
-int pthread_mutex_unlock_c(pthread_mutex_t_c *mutex){
+int pthread_mutex_unlock_metric_c(pthread_mutex_metric_t_c *lock){
+	METRIC_BEFORE_UNLOCK;
 	__asm __volatile(
 
 	"lock; decl %0\n\t"
@@ -55,15 +59,16 @@ int pthread_mutex_unlock_c(pthread_mutex_t_c *mutex){
 	"syscall\n\t"
 
 	"3:"
-	: "=m" (*mutex)
-	: "m" (*mutex)
+	: "=m" (*lock)
+	: "m" (*lock), "D" (lock)
 	: "cx", "r11", "cc", "memory");
 	return 0;
 }
 
-int pthread_mutex_init_c(pthread_mutex_t_c *mutex, void *attr){
-	if (attr != NULL && (*(int*)attr) == 1) mutex->__lock = 1;
-	else mutex->__lock = 0;
-	mutex->__spins = 0;
+int pthread_mutex_init_metric_c(pthread_mutex_metric_t_c *lock, void *attr){
+	METRIC_INIT_LOCK;
+	if (attr != NULL && (*(int*)attr) == 1) lock->__lock = 1;
+	else lock->__lock = 0;
+	lock->__spins = 0;
 	return 0;
 }
