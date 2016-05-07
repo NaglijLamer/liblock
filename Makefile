@@ -4,18 +4,21 @@ CFLAGSNEW=-Wall -Wextra -std=gnu99 -pthread -lrt -O3 -D_REENTRANT
 CFLAGSL=$(CFLAGSNEW) -fpic
 CFLAGSTIME=-Wall -Wextra -std=gnu99 -pthread -O3 -D_REENTRANT -D_GLOBAL_TIMER_LOCK
 CFLAGSM=$(CFLAGSNEW) -D_METRIC
+CFLAGSMS=$(CFLAGSM) -D_SHORT_METRIC
 CFLAGSOLD=-Wall -Wextra -std=gnu99 -pedantic -pthread -O3 -D_REENTRANT
 CFLAGSNEW2=-Wall -Wextra -std=gnu99 -pedantic -pthread -D_REENTRANT
 LIBRARY=-llock -lrt
 CLEAR_ASM=-Wall -Wextra -std=gnu99 -pedantic -pthread -S
+TEST_NAME=test2.c
 //DIR=/home/naglijlamer/vkr/liblock
 DIR=/home/naglijlamer/liv
 PREPR=$(CFLAGSNEW) -E
 ASM=$(CFLAGSNEW) -S 
 DEBUG=$(CFLAGSNEW) -g
 
-#library compilation => create many rules and place it as dependencies?
-#library: custom_lock.h pthread_mutex_custom.c pthread_mutex_custom.h pthread_spin_custom.c pthread_spin_custom.h ticket_spin.c ticket_spin.h MCS_spin.h MCS_spin.c adaptive_mutex.c adaptive_mutex.h custom_lock_normal.h custom_lock_metric.h metrics.h pthread_spin_custom_metric.c pthread_spin_custom_metric.h metric_function.h metric_function.c global_metric.h global_metric.c pthread_mutex_metric.h pthread_mutex_metric.c ticket_spin_metric.c ticket_spin_metric.h adaptive_mutex_metric.c adaptive_mutex_metric.h pthread_spin_metric.h pthread_spin_metric.c MCS_spin_metric.h MCS_spin_metric.c
+.DEFAULT_GOAL := all
+
+#library compilation 
 library: library_compile library_clean
 	@true
 libmutex: pthread_mutex_custom.c pthread_mutex_custom.h
@@ -42,8 +45,10 @@ libposixspinmetric: metrics.h pthread_spin_metric.h pthread_spin_metric.c
 	$(CC) -c $(CFLAGSL) pthread_spin_metric.c -o libposixspinmetric.o
 libMCSmetric: metrics.h MCS_spin_metric.h MCS_spin_metric.c
 	$(CC) -c $(CFLAGSL) MCS_spin_metric.c -o libMCSmetric.o
+#depricated
 libmetric: metrics.h metric_function.h metric_function.c
 	$(CC) -c $(CFLAGSL) metric_function.c -o libmetric.o
+#depricated
 libmetric2: metrics.h global_metric.h global_metric.c
 	$(CC) -c $(CFLAGSL) global_metric.c -o libmetric2.o
 library_compile: libmutex libspin libticket libMCS libadaptive libspinmetric libmutexmetric libposixmutexmetric libticketmetric libadaptivemetric libposixspinmetric libMCSmetric libmetric libmetric2
@@ -53,61 +58,79 @@ library_clean:
 
 #probably some stuff to generate output file names
 #compile test files to get test_LOCK_time apps 
-test_spin_time: test.c library
-	$(CC) $(CFLAGSTIME) -D_SPINCLASSIC -L$(DIR) test.c -o test_spin_time $(LIBRARY)
-test_mutex_time: test.c library
-	$(CC) $(CFLAGSTIME) -D_MUTEX -L$(DIR) test.c -o test_mutex_time $(LIBRARY)
-test_posixmutex_time: test.c library
-	$(CC) $(CFLAGSTIME) -D_POSIXMUTEX -L$(DIR) test.c -o test_posixmutex_time $(LIBRARY)
-test_posixspin_time: test.c library
-	$(CC) $(CFLAGSTIME) -D_POSIXSPIN -L$(DIR) test.c -o test_posixspin_time $(LIBRARY)
-test_ticket_time: test.c library
-	$(CC) $(CFLAGSTIME) -D_TICKETSPIN -L$(DIR) test.c -o test_ticket_time $(LIBRARY)
-test_MCS_time: test.c library
-	$(CC) $(CFLAGSTIME) -D_MCS_SPIN -L$(DIR) test.c -o test_MCS_time $(LIBRARY)
-test_adaptive_time: test.c library
-	$(CC) $(CFLAGSTIME) -D_ADAPTIVE -L$(DIR) test.c -o test_adaptive_time $(LIBRARY)
+test_spin_time: $(TEST_NAME) library
+	$(CC) $(CFLAGSTIME) -D_SPINCLASSIC -L$(DIR) $(TEST_NAME) -o test_spin_time $(LIBRARY)
+test_mutex_time: $(TEST_NAME) library
+	$(CC) $(CFLAGSTIME) -D_MUTEX -L$(DIR) $(TEST_NAME) -o test_mutex_time $(LIBRARY)
+test_posixmutex_time: $(TEST_NAME) library
+	$(CC) $(CFLAGSTIME) -D_POSIXMUTEX -L$(DIR) $(TEST_NAME) -o test_posixmutex_time $(LIBRARY)
+test_posixspin_time: $(TEST_NAME) library
+	$(CC) $(CFLAGSTIME) -D_POSIXSPIN -L$(DIR) $(TEST_NAME) -o test_posixspin_time $(LIBRARY)
+test_ticket_time: $(TEST_NAME) library
+	$(CC) $(CFLAGSTIME) -D_TICKETSPIN -L$(DIR) $(TEST_NAME) -o test_ticket_time $(LIBRARY)
+test_MCS_time: $(TEST_NAME) library
+	$(CC) $(CFLAGSTIME) -D_MCS_SPIN -L$(DIR) $(TEST_NAME) -o test_MCS_time $(LIBRARY)
+test_adaptive_time: $(TEST_NAME) library
+	$(CC) $(CFLAGSTIME) -D_ADAPTIVE -L$(DIR) $(TEST_NAME) -o test_adaptive_time $(LIBRARY)
 test_time: test_spin_time test_ticket_time test_mutex_time test_posixmutex_time test_posixspin_time test_MCS_time test_adaptive_time
 	@true
 
 #compile test files to get test_LOCK normal apps
-test_spin: test.c library
-	$(CC) $(CFLAGSNEW) -D_SPINCLASSIC -L$(DIR) test.c -o test_spin $(LIBRARY)
-test_ticket: test.c library
-	$(CC) $(CFLAGSNEW) -D_TICKETSPIN -L$(DIR) test.c -o test_ticket $(LIBRARY) 
-test_mutex: test.c library
-	$(CC) $(CFLAGSNEW) -D_MUTEX -L$(DIR) test.c -o test_mutex $(LIBRARY)
-test_posix_mutex: test.c library
-	$(CC) $(CFLAGSNEW) -D_POSIXMUTEX -L$(DIR) test.c -o test_posixmutex $(LIBRARY)
-test_posix_spin: test.c library
-	$(CC) $(CFLAGSNEW) -D_POSIXSPIN -L$(DIR) test.c -o test_posixspin $(LIBRARY)
-test_MCS: test.c library
-	$(CC) $(CFLAGSNEW) -D_MCS_SPIN -L$(DIR) test.c -o test_MCS $(LIBRARY)
-test_adaptive: test.c library
-	$(CC) $(CFLAGSNEW) -D_ADAPTIVE -L$(DIR) test.c -o test_adaptive $(LIBRARY)
+test_spin: $(TEST_NAME) library
+	$(CC) $(CFLAGSNEW) -D_SPINCLASSIC -L$(DIR) $(TEST_NAME) -o test_spin $(LIBRARY)
+test_ticket: $(TEST_NAME) library
+	$(CC) $(CFLAGSNEW) -D_TICKETSPIN -L$(DIR) $(TEST_NAME) -o test_ticket $(LIBRARY) 
+test_mutex: $(TEST_NAME) library
+	$(CC) $(CFLAGSNEW) -D_MUTEX -L$(DIR) $(TEST_NAME) -o test_mutex $(LIBRARY)
+test_posix_mutex: $(TEST_NAME) library
+	$(CC) $(CFLAGSNEW) -D_POSIXMUTEX -L$(DIR) $(TEST_NAME) -o test_posixmutex $(LIBRARY)
+test_posix_spin: $(TEST_NAME) library
+	$(CC) $(CFLAGSNEW) -D_POSIXSPIN -L$(DIR) $(TEST_NAME) -o test_posixspin $(LIBRARY)
+test_MCS: $(TEST_NAME) library
+	$(CC) $(CFLAGSNEW) -D_MCS_SPIN -L$(DIR) $(TEST_NAME) -o test_MCS $(LIBRARY)
+test_adaptive: $(TEST_NAME) library
+	$(CC) $(CFLAGSNEW) -D_ADAPTIVE -L$(DIR) $(TEST_NAME) -o test_adaptive $(LIBRARY)
 test: test_spin test_ticket test_mutex test_posix_mutex test_posix_spin test_MCS test_adaptive
 	@true
 
 #compile test files to get metric_LOCK apps
-test_spin_metric: test.c library
-	$(CC) $(CFLAGSM) -D_SPINCLASSIC -L$(DIR) test.c -o metric_spin $(LIBRARY)
-test_ticket_metric: test.c library
-	$(CC) $(CFLAGSM) -D_TICKETSPIN -L$(DIR) test.c -o metric_ticket $(LIBRARY)
-test_mutex_metric: test.c library
-	$(CC) $(CFLAGSM) -D_MUTEX -L$(DIR) test.c -o metric_mutex $(LIBRARY)
-test_posix_mutex_metric: test.c library
-	$(CC) $(CFLAGSM) -D_POSIXMUTEX -L$(DIR) test.c -o metric_posixmutex $(LIBRARY)
-test_posix_spin_metric: test.c library
-	$(CC) $(CFLAGSM) -D_POSIXSPIN -L$(DIR) test.c -o metric_posixspin $(LIBRARY)
-test_MCS_metric: test.c library
-	$(CC) $(CFLAGSM) -D_MCS_SPIN -L$(DIR) test.c -o metric_MCS $(LIBRARY)
-test_adaptive_metric: test.c library
-	$(CC) $(CFLAGSM) -D_ADAPTIVE -L$(DIR) test.c -o metric_adaptive $(LIBRARY)
+test_spin_metric: $(TEST_NAME) library
+	$(CC) $(CFLAGSM) -D_SPINCLASSIC -L$(DIR) $(TEST_NAME) -o metric_spin $(LIBRARY)
+test_ticket_metric: $(TEST_NAME) library
+	$(CC) $(CFLAGSM) -D_TICKETSPIN -L$(DIR) $(TEST_NAME) -o metric_ticket $(LIBRARY)
+test_mutex_metric: $(TEST_NAME) library
+	$(CC) $(CFLAGSM) -D_MUTEX -L$(DIR) $(TEST_NAME) -o metric_mutex $(LIBRARY)
+test_posix_mutex_metric: $(TEST_NAME) library
+	$(CC) $(CFLAGSM) -D_POSIXMUTEX -L$(DIR) $(TEST_NAME) -o metric_posixmutex $(LIBRARY)
+test_posix_spin_metric: $(TEST_NAME) library
+	$(CC) $(CFLAGSM) -D_POSIXSPIN -L$(DIR) $(TEST_NAME) -o metric_posixspin $(LIBRARY)
+test_MCS_metric: $(TEST_NAME) library
+	$(CC) $(CFLAGSM) -D_MCS_SPIN -L$(DIR) $(TEST_NAME) -o metric_MCS $(LIBRARY)
+test_adaptive_metric: $(TEST_NAME) library
+	$(CC) $(CFLAGSM) -D_ADAPTIVE -L$(DIR) $(TEST_NAME) -o metric_adaptive $(LIBRARY)
 test_metric: test_spin_metric test_ticket_metric test_mutex_metric test_posix_mutex_metric test_posix_spin_metric test_MCS_metric test_adaptive_metric
 	@true
 
+#short output for parsing scripts
+test_spin_metric_s: $(TEST_NAME) library
+	$(CC) $(CFLAGSMS) -D_SPINCLASSIC -L$(DIR) $(TEST_NAME) -o smetric_spin $(LIBRARY)
+test_ticket_metric_s: $(TEST_NAME) library
+	$(CC) $(CFLAGSMS) -D_TICKETSPIN -L$(DIR) $(TEST_NAME) -o smetric_ticket $(LIBRARY)
+test_mutex_metric_s: $(TEST_NAME) library
+	$(CC) $(CFLAGSMS) -D_MUTEX -L$(DIR) $(TEST_NAME) -o smetric_mutex $(LIBRARY)
+test_posix_mutex_metric_s: $(TEST_NAME) library
+	$(CC) $(CFLAGSMS) -D_POSIXMUTEX -L$(DIR) $(TEST_NAME) -o smetric_posixmutex $(LIBRARY)
+test_posix_spin_metric_s: $(TEST_NAME) library
+	$(CC) $(CFLAGSMS) -D_POSIXSPIN -L$(DIR) $(TEST_NAME) -o smetric_posixspin $(LIBRARY)
+test_MCS_metric_s: $(TEST_NAME) library
+	$(CC) $(CFLAGSMS) -D_MCS_SPIN -L$(DIR) $(TEST_NAME) -o smetric_MCS $(LIBRARY)
+test_adaptive_metric_s: $(TEST_NAME) library
+	$(CC) $(CFLAGSMS) -D_ADAPTIVE -L$(DIR) $(TEST_NAME) -o smetric_adaptive $(LIBRARY)
+test_metric_s: test_spin_metric_s test_ticket_metric_s test_mutex_metric_s test_posix_mutex_metric_s test_posix_spin_metric_s test_MCS_metric_s test_adaptive_metric_s
+	@true
+
 #everything
-all: test test_time test_metric
+all: test test_time test_metric test_metric_s
 	@true
 
 #test stuff

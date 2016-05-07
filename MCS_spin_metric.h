@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include "global_metric.h"
+#include "metric_function.h"
 #include "metrics.h"
 
 //typedef struct MCS_node MCS_node;

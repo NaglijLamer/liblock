@@ -3,6 +3,7 @@
 
 #include "metrics.h"
 #include "global_metric.h"
+#include "metric_function.h"
 
 /*typedef volatile struct{
 	int next;

@@ -3,6 +3,7 @@
 
 #include "metrics.h"
 #include "global_metric.h"
+#include "metric_function.h"
 
 /*#define SYS_futex 202
 #define FUTEX_WAIT 0
