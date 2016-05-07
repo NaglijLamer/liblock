@@ -9,7 +9,7 @@ CFLAGSOLD=-Wall -Wextra -std=gnu99 -pedantic -pthread -O3 -D_REENTRANT
 CFLAGSNEW2=-Wall -Wextra -std=gnu99 -pedantic -pthread -D_REENTRANT
 LIBRARY=-llock -lrt
 CLEAR_ASM=-Wall -Wextra -std=gnu99 -pedantic -pthread -S
-TEST_NAME=test2.c
+TEST_NAME=test_m.c
 //DIR=/home/naglijlamer/vkr/liblock
 DIR=/home/naglijlamer/liv
 PREPR=$(CFLAGSNEW) -E
