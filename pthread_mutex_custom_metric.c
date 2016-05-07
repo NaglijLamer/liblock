@@ -2,7 +2,7 @@
 //#include <stddef.h> 
 
 int pthread_mutex_lock_metric_c(pthread_mutex_metric_t_c *lock){
-	METRIC_BEFORE_LOCK;
+	METRIC_BEFORE_LOCK(lock);
 	int ign0, ign1;
 	__asm __volatile(
 	//"int $3\n\t"
@@ -37,12 +37,12 @@ int pthread_mutex_lock_metric_c(pthread_mutex_metric_t_c *lock){
 	: "0" (1), "m" (*lock), "2" (0), "D" (lock)
 	: "cx", "r11", "cc", "memory");
 
-	METRIC_AFTER_LOCK;
+	METRIC_AFTER_LOCK(lock);
 	return 0;
 }
 
 int pthread_mutex_unlock_metric_c(pthread_mutex_metric_t_c *lock){
-	METRIC_BEFORE_UNLOCK;
+	METRIC_BEFORE_UNLOCK(lock);
 	__asm __volatile(
 
 	"lock; decl %0\n\t"
@@ -66,7 +66,7 @@ int pthread_mutex_unlock_metric_c(pthread_mutex_metric_t_c *lock){
 }
 
 int pthread_mutex_init_metric_c(pthread_mutex_metric_t_c *lock, void *attr){
-	METRIC_INIT_LOCK;
+	METRIC_INIT_LOCK(lock);
 	if (attr != NULL && (*(int*)attr) == 1) lock->__lock = 1;
 	else lock->__lock = 0;
 	lock->__spins = 0;

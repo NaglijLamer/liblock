@@ -57,13 +57,13 @@ typedef volatile struct{
 	METRIC_VARS;
 }custom_lock;
 
-#define METRIC_INIT_LOCK ({\
+#define METRIC_INIT_LOCK(lock) ({\
 	pthread_key_create((pthread_key_t*)(&((lock)->__key)), NULL);\
 	(lock)->__count_thr = 10;\
 	(lock)->__content_thr = (__thr*)malloc(sizeof(__thr) * (lock)->__count_thr);\
 	})
 
-#define METRIC_BEFORE_LOCK double __temp_w, __temp_cpu_w;\
+#define METRIC_BEFORE_LOCK(lock) double __temp_w, __temp_cpu_w;\
         struct timespec __temp_time, __temp_time_cpu;\
 	({\
         (lock)->__N++;\
@@ -73,7 +73,7 @@ typedef volatile struct{
         __temp_w = TIMESPEC_TO_DOUBLE(__temp_time);\
 	})
 
-#define METRIC_AFTER_LOCK ({\
+#define METRIC_AFTER_LOCK(lock) ({\
 	int *n;\
 	if ((n = pthread_getspecific((lock)->__key)) == NULL){\
 		n = (int*)malloc(sizeof(int));\
@@ -131,7 +131,7 @@ typedef volatile struct{
         (lock)->__temp_a = __temp_w;\
 	})
 
-#define METRIC_BEFORE_UNLOCK ({\
+#define METRIC_BEFORE_UNLOCK(lock) ({\
 	struct timespec __temp;\
         clock_gettime(CLOCK_MONOTONIC, &__temp);\
         (lock)->__b += TIMESPEC_TO_DOUBLE(__temp) - (lock)->__temp_b;\

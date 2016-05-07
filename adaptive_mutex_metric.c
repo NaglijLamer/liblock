@@ -10,7 +10,7 @@
 	ret;})
 
 int adaptive_mutex_lock_metric(pthread_mutex_metric_t_c *lock){
-	METRIC_BEFORE_LOCK;
+	METRIC_BEFORE_LOCK(lock);
 	int ign0, ign1;
 	if (TRYLOCK(lock->__lock) != 0){
 		int cnt = 0;
@@ -46,7 +46,7 @@ int adaptive_mutex_lock_metric(pthread_mutex_metric_t_c *lock){
 		} while (TRYLOCK(lock->__lock) != 0);
 		lock->__spins += (cnt - lock->__spins) / 8;
 	}
-	METRIC_AFTER_LOCK;
+	METRIC_AFTER_LOCK(lock);
 	return 0;
 }
 

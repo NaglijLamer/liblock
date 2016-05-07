@@ -6,7 +6,7 @@ It uses pthread_key_t to get thread specific element of spinlock*/
 //#include <stdio.h>
 
 int MCS_spin_lock_metric(MCS_lock_metric_t *lock){
-	METRIC_BEFORE_LOCK;
+	METRIC_BEFORE_LOCK(lock);
 	MCS_node *I, *pred;
 	long long ign0;
 	//MCS_node *I;
@@ -37,12 +37,12 @@ int MCS_spin_lock_metric(MCS_lock_metric_t *lock){
 	: "2" (0), "S" (I), "D" (lock));
 	/*printf("%s", "Got lock\n");
 	fflush(stdout);*/
-	METRIC_AFTER_LOCK;
+	METRIC_AFTER_LOCK(lock);
 	return 0;
 }
 
 int MCS_spin_unlock_metric(MCS_lock_metric_t *lock){
-	METRIC_BEFORE_UNLOCK;
+	METRIC_BEFORE_UNLOCK(lock);
 	long long ign0;
 	MCS_node *I = (MCS_node*)pthread_getspecific(lock->key);
 	/*printf("%s", "Try to realize lock\n");
@@ -69,7 +69,7 @@ int MCS_spin_unlock_metric(MCS_lock_metric_t *lock){
 }
 
 int MCS_spin_init_metric(MCS_lock_metric_t *lock, __attribute__ ((unused)) int locked){
-	METRIC_INIT_LOCK;
+	METRIC_INIT_LOCK(lock);
 	//Second argument must be not NULL, but pointer to destructor.
 	pthread_key_create((pthread_key_t*)lock, NULL);
 	lock->L = NULL;

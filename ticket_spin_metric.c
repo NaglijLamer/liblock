@@ -1,7 +1,7 @@
 #include "ticket_spin_metric.h"
 
 int ticket_spin_lock_metric(ticket_spinlock_metric_t *lock){
-	METRIC_BEFORE_LOCK;
+	METRIC_BEFORE_LOCK(lock);
 	int ign;
 	__asm __volatile(
 	"lock; xaddl %0, %1\n\t"
@@ -14,12 +14,12 @@ int ticket_spin_lock_metric(ticket_spinlock_metric_t *lock){
 	: "=a" (ign), "=m" (*lock)
 	: "0" (1), "m" (*lock));
 	//: "cc", "memory");
-	METRIC_AFTER_LOCK;
+	METRIC_AFTER_LOCK(lock);
 	return 0;
 }
 
 int ticket_spin_unlock_metric(ticket_spinlock_metric_t *lock){
-	METRIC_BEFORE_UNLOCK;
+	METRIC_BEFORE_UNLOCK(lock);
 	lock->serv++;
 	//__asm __volatile(
 	//"movl $1, %0\n\t"
@@ -29,7 +29,7 @@ int ticket_spin_unlock_metric(ticket_spinlock_metric_t *lock){
 }
 
 int ticket_spin_init_metric(ticket_spinlock_metric_t *lock, int locked){
-	METRIC_INIT_LOCK;
+	METRIC_INIT_LOCK(lock);
 	lock->serv = 0;
 	lock->next = locked > 0? 1 : 0;
 	return 0;
