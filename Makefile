@@ -10,8 +10,8 @@ CFLAGSNEW2=-Wall -Wextra -std=gnu99 -pedantic -pthread -D_REENTRANT
 LIBRARY=-llock -lrt
 CLEAR_ASM=-Wall -Wextra -std=gnu99 -pedantic -pthread -S
 TEST_NAME=test_m.c
-DIR=/home/naglijlamer/vkr/liblock
 #DIR=/home/naglijlamer/liv
+DIR=$(shell pwd)
 PREPR=$(CFLAGSNEW) -E
 ASM=$(CFLAGSNEW) -S 
 DEBUG=$(CFLAGSNEW) -g

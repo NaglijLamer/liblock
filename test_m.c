@@ -23,6 +23,7 @@ int critical_section_iterarions; /*1 000 000*/
 int after_section_iterations;
 
 void *thread_function(){
+	volatile double res;
 	double m;
 	while (TRUE){
 		if (custom_lock_lock(&lock) != SUCCESS)
@@ -30,7 +31,8 @@ void *thread_function(){
 		m = 1.0;
 		for (int i = 1; i < critical_section_iterarions; i++)
                         m *= i;
-                printf("%f\n", m);
+                /*printf("%f\n", m);*/
+		res = m;
 		count--;
                 if (custom_lock_unlock(&lock) != SUCCESS)
                         error("test_m:custom_lock_unlock");
@@ -38,7 +40,8 @@ void *thread_function(){
 		m = 1.0;
 		for (int i = 1; i < after_section_iterations; i++)
                         m *= i;
-                printf("%f\n", m);
+		res = m;
+                /*printf("%f\n", m);*/
 	}
 }
 
