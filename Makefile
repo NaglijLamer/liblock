@@ -1,8 +1,8 @@
 CC=gcc
 CCP=g++
-CFLAGSNEW=-Wall -Wextra -std=gnu99 -pthread -lrt -O3 -D_REENTRANT
+CFLAGSNEW=-Wall -Wextra -std=gnu99 -pthread -lrt -O3 -D_REENTRANT -Wno-unused-but-set-variable
 CFLAGSL=$(CFLAGSNEW) -fpic
-CFLAGSTIME=-Wall -Wextra -std=gnu99 -pthread -O3 -D_REENTRANT -D_GLOBAL_TIMER_LOCK
+CFLAGSTIME=-Wall -Wextra -std=gnu99 -pthread -O3 -D_REENTRANT -D_GLOBAL_TIMER_LOCK -Wno-unused-but-set-variable
 CFLAGSM=$(CFLAGSNEW) -D_METRIC
 CFLAGSMS=$(CFLAGSM) -D_SHORT_METRIC
 CFLAGSOLD=-Wall -Wextra -std=gnu99 -pedantic -pthread -O3 -D_REENTRANT

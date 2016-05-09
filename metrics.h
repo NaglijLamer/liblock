@@ -11,6 +11,9 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 #include <sched.h>
+#include <sys/ioctl.h>
+#include <string.h>
+#include <linux/perf_event.h>
 //#define TIMESPEC_TO_DOUBLE(x) (1000.0 * x.tv_sec + 1e-6 * x.tv_nsec)
 
 typedef struct {
@@ -19,6 +22,8 @@ typedef struct {
 	double __wait_time;
 	double __max_wait_time;
 	pid_t __tid;
+	int __fd_l;
+	int __fd_cr;
 	//int __core;
 }__thr;
 	
@@ -39,6 +44,8 @@ typedef struct {
 	/*pid_t __prev;*/\
 	/*double __temp_cpu_b;*/\
 	/*double __b_cpu;*/\
+	long long __br_l;\
+	long long __br_cr;\
         bool __is_next/* = false*/;
 
 //#include "MCS_spin_metric.h"
@@ -48,6 +55,11 @@ volatile struct{
         int count;
         void **lock;
 	int size;
+	int fd1;
+	int fd2;
+	int fd3;
+	int fd4;
+	int fd5;
 }lock_address;
 
 typedef volatile struct{
@@ -80,6 +92,12 @@ typedef volatile struct{
 	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &__temp_time_cpu);\
 	__temp_cpu_w = TIMESPEC_TO_DOUBLE(__temp_time_cpu);\
         __temp_w = TIMESPEC_TO_DOUBLE(__temp_time);\
+	\
+	int *n;\
+	if ((n = pthread_getspecific((lock)->__key)) != NULL){\
+		ioctl((lock)->__content_thr[*n].__fd_l, PERF_EVENT_IOC_RESET, 0);\
+		ioctl((lock)->__content_thr[*n].__fd_l, PERF_EVENT_IOC_ENABLE, 0);\
+	}\
 	})
 
 #define METRIC_AFTER_LOCK(lock) ({\
@@ -94,8 +112,28 @@ typedef volatile struct{
 		}\
 		(lock)->__content_thr[*n].__tid = syscall(SYS_gettid);\
 		(lock)->__content_thr[*n].__count = 0;\
+		\
+		struct perf_event_attr pe1, pe2;\
+		memset(&pe1, 0, sizeof(struct perf_event_attr));\
+		memset(&pe2, 0, sizeof(struct perf_event_attr));\
+		pe1.type = pe2.type = PERF_TYPE_HARDWARE;\
+		pe1.size = pe2.size = sizeof(struct perf_event_attr);\
+		pe1.config = pe2.config = PERF_COUNT_HW_BRANCH_INSTRUCTIONS;\
+		pe1.disabled = pe2.disabled = 1;\
+		(lock)->__content_thr[*n].__fd_cr = syscall(__NR_perf_event_open, &pe1, (lock)->__content_thr[*n].__tid, -1, -1, 0);\
+		(lock)->__content_thr[*n].__fd_l = syscall(__NR_perf_event_open, &pe2, (lock)->__content_thr[*n].__tid, -1, -1, 0);\
+		ioctl((lock)->__content_thr[*n].__fd_l, PERF_EVENT_IOC_RESET, 0);\
+		ioctl((lock)->__content_thr[*n].__fd_cr, PERF_EVENT_IOC_RESET, 0);\
+		\
 		/*(lock)->__content_thr[*n].__core = sched_getcpu();*/\
 	}\
+	\
+	int ignore; \
+	long long count;\
+	ioctl((lock)->__content_thr[*n].__fd_l, PERF_EVENT_IOC_DISABLE, 0);\
+	ignore = read((lock)->__content_thr[*n].__fd_l, &count, sizeof(long long));\
+	(lock)->__br_l += count;\
+	\
 	(lock)->__N++;\
 	/*if ((lock)->__content_thr[*n].__tid == (lock)->__prev) fprintf(stderr, "I am here again at %ld and now %ld. TID: %d\n", (lock)->__N - 1, (lock)->__N, (lock)->__content_thr[*n].__tid);*/\
 	/*else (lock)->__prev = (lock)->__content_thr[*n].__tid;*/\
@@ -130,6 +168,10 @@ typedef volatile struct{
                         lock_address.lock = realloc(lock_address.lock, sizeof(void*) * lock_address.size);\
                 }\
 	}\
+	\
+	ioctl((lock)->__content_thr[*n].__fd_cr, PERF_EVENT_IOC_RESET, 0);\
+	ioctl((lock)->__content_thr[*n].__fd_cr, PERF_EVENT_IOC_ENABLE, 0);\
+	\
         })
 
 #define METRIC_AFTER_LOCK_OLD(lock) ({\
@@ -192,6 +234,14 @@ typedef volatile struct{
 
 #define METRIC_BEFORE_UNLOCK(lock) ({\
 	struct timespec __temp/*, __temp_time_cpu*/;\
+	\
+	int ignore;\
+	long long count;\
+	int *n = (int*)pthread_getspecific((lock)->__key);\
+	ioctl((lock)->__content_thr[*n].__fd_cr, PERF_EVENT_IOC_DISABLE, 0);\
+	ignore = read((lock)->__content_thr[*n].__fd_cr, &count, sizeof(long long));\
+	(lock)->__br_cr += count;\
+	\
         clock_gettime(CLOCK_MONOTONIC, &__temp);\
 	/*clock_gettime(CLOCK_THREAD_CPUTIME_ID, &__temp_time_cpu);*/\
 	/*(lock)->__b_cpu += TIMESPEC_TO_DOUBLE(__temp_time_cpu) - (lock)->__temp_cpu_b;*/\

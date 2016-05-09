@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <pthread.h>
+/*#include <sys/time.h>
+#include <sys/resource.h>*/
 #include "custom_lock.h"
 
 #define USAGE "Usage: app_name amount_of_threads total_locks iteractions_in_section iteractions_between_sections"
@@ -28,12 +30,14 @@ void *thread_function(){
 	while (TRUE){
 		if (custom_lock_lock(&lock) != SUCCESS)
                         error("test_m:custom_lock_lock");
+		//usleep(0);
 		m = 1.0;
 		for (int i = 1; i < critical_section_iterarions; i++)
                         m *= i;
                 /*printf("%f\n", m);*/
 		res = m;
 		count--;
+		//usleep(0);
                 if (custom_lock_unlock(&lock) != SUCCESS)
                         error("test_m:custom_lock_unlock");
 		if (count <= 0) return NULL;
@@ -63,5 +67,8 @@ int main (int argc, char *argv[]){
                 	error("test_m:pthread_create");
 	for (int i = 0; i < amount_thr; i++)
 		pthread_join(threads[i], NULL);
+	/*struct rusage test;
+	getrusage(RUSAGE_SELF, &test);
+	fprintf(stderr, "Before quanta %ld, cause of quanta %ld\n", test.ru_nvcsw, test.ru_nivcsw);*/
 	return EXIT_SUCCESS;
 }
