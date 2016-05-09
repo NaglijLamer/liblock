@@ -10,8 +10,8 @@ CFLAGSNEW2=-Wall -Wextra -std=gnu99 -pedantic -pthread -D_REENTRANT
 LIBRARY=-llock -lrt
 CLEAR_ASM=-Wall -Wextra -std=gnu99 -pedantic -pthread -S
 TEST_NAME=test_m.c
-//DIR=/home/naglijlamer/vkr/liblock
-DIR=/home/naglijlamer/liv
+DIR=/home/naglijlamer/vkr/liblock
+#DIR=/home/naglijlamer/liv
 PREPR=$(CFLAGSNEW) -E
 ASM=$(CFLAGSNEW) -S 
 DEBUG=$(CFLAGSNEW) -g
@@ -31,6 +31,8 @@ libMCS: MCS_spin.h MCS_spin.c
 	$(CC) -c $(CFLAGSL) MCS_spin.c -o libMCS.o
 libadaptive: adaptive_mutex.c adaptive_mutex.h
 	$(CC) -c $(CFLAGSL) adaptive_mutex.c -o libadaptive.o
+libyield: yield_mutex.c yield_mutex.h
+	$(CC) -c $(CFLAGSL) yield_mutex.c -o libyield.o
 libspinmetric: metrics.h pthread_spin_custom_metric.c pthread_spin_custom_metric.h
 	$(CC) -c $(CFLAGSL) pthread_spin_custom_metric.c -o libspinmetric.o
 libmutexmetric: metrics.h pthread_mutex_custom_metric.c pthread_mutex_custom_metric.h
@@ -41,6 +43,8 @@ libticketmetric: metrics.h ticket_spin_metric.c ticket_spin_metric.h
 	$(CC) -c $(CFLAGSL) ticket_spin_metric.c -o libticketmetric.o
 libadaptivemetric: metrics.h adaptive_mutex_metric.c adaptive_mutex_metric.h
 	$(CC) -c $(CFLAGSL) adaptive_mutex_metric.c -o libadaptivemetric.o
+libyieldmetric: metrics.h yield_mutex_metric.c yield_mutex_metric.h
+	$(CC) -c $(CFLAGSL) yield_mutex_metric.c -o libyieldmetric.o
 libposixspinmetric: metrics.h pthread_spin_metric.h pthread_spin_metric.c
 	$(CC) -c $(CFLAGSL) pthread_spin_metric.c -o libposixspinmetric.o
 libMCSmetric: metrics.h MCS_spin_metric.h MCS_spin_metric.c
@@ -51,10 +55,10 @@ libmetric: metrics.h metric_function.h metric_function.c
 #depricated
 libmetric2: metrics.h global_metric.h global_metric.c
 	$(CC) -c $(CFLAGSL) global_metric.c -o libmetric2.o
-library_compile: libmutex libspin libticket libMCS libadaptive libspinmetric libmutexmetric libposixmutexmetric libticketmetric libadaptivemetric libposixspinmetric libMCSmetric libmetric libmetric2
-	$(CC) -shared libmutex.o libspin.o libticket.o libMCS.o libadaptive.o libmetric.o libmetric2.o libspinmetric.o libmutexmetric.o libposixmutexmetric.o libticketmetric.o libadaptivemetric.o libposixspinmetric.o libMCSmetric.o -o liblock.so
+library_compile: libmutex libspin libticket libMCS libadaptive libspinmetric libmutexmetric libposixmutexmetric libticketmetric libadaptivemetric libposixspinmetric libMCSmetric libmetric libmetric2 libyield libyieldmetric
+	$(CC) -shared libmutex.o libspin.o libticket.o libMCS.o libadaptive.o libmetric.o libmetric2.o libspinmetric.o libmutexmetric.o libposixmutexmetric.o libticketmetric.o libadaptivemetric.o libposixspinmetric.o libMCSmetric.o libyield.o libyieldmetric.o -o liblock.so
 library_clean:
-	rm libmutex.o libspin.o libticket.o libMCS.o libadaptive.o libspinmetric.o libmetric2.o libmetric.o libmutexmetric.o libposixmutexmetric.o libticketmetric.o libadaptivemetric.o libposixspinmetric.o libMCSmetric.o
+	rm libmutex.o libspin.o libticket.o libMCS.o libadaptive.o libspinmetric.o libmetric2.o libmetric.o libmutexmetric.o libposixmutexmetric.o libticketmetric.o libadaptivemetric.o libposixspinmetric.o libMCSmetric.o libyield.o libyieldmetric.o
 
 #probably some stuff to generate output file names
 #compile test files to get test_LOCK_time apps 
@@ -72,7 +76,9 @@ test_MCS_time: $(TEST_NAME) library
 	$(CC) $(CFLAGSTIME) -D_MCS_SPIN -L$(DIR) $(TEST_NAME) -o test_MCS_time $(LIBRARY)
 test_adaptive_time: $(TEST_NAME) library
 	$(CC) $(CFLAGSTIME) -D_ADAPTIVE -L$(DIR) $(TEST_NAME) -o test_adaptive_time $(LIBRARY)
-test_time: test_spin_time test_ticket_time test_mutex_time test_posixmutex_time test_posixspin_time test_MCS_time test_adaptive_time
+test_yield_time: $(TEST_NAME) library
+	$(CC) $(CFLAGSTIME) -D_YIELD -L$(DIR) $(TEST_NAME) -o test_yield_time $(LIBRARY)
+test_time: test_spin_time test_ticket_time test_mutex_time test_posixmutex_time test_posixspin_time test_MCS_time test_adaptive_time test_yield_time
 	@true
 
 #compile test files to get test_LOCK normal apps
@@ -90,7 +96,9 @@ test_MCS: $(TEST_NAME) library
 	$(CC) $(CFLAGSNEW) -D_MCS_SPIN -L$(DIR) $(TEST_NAME) -o test_MCS $(LIBRARY)
 test_adaptive: $(TEST_NAME) library
 	$(CC) $(CFLAGSNEW) -D_ADAPTIVE -L$(DIR) $(TEST_NAME) -o test_adaptive $(LIBRARY)
-test: test_spin test_ticket test_mutex test_posix_mutex test_posix_spin test_MCS test_adaptive
+test_yield: $(TEST_NAME) library
+	$(CC) $(CFLAGSNEW) -D_YIELD -L$(DIR) $(TEST_NAME) -o test_yield $(LIBRARY)
+test: test_spin test_ticket test_mutex test_posix_mutex test_posix_spin test_MCS test_adaptive test_yield
 	@true
 
 #compile test files to get metric_LOCK apps
@@ -108,7 +116,9 @@ test_MCS_metric: $(TEST_NAME) library
 	$(CC) $(CFLAGSM) -D_MCS_SPIN -L$(DIR) $(TEST_NAME) -o metric_MCS $(LIBRARY)
 test_adaptive_metric: $(TEST_NAME) library
 	$(CC) $(CFLAGSM) -D_ADAPTIVE -L$(DIR) $(TEST_NAME) -o metric_adaptive $(LIBRARY)
-test_metric: test_spin_metric test_ticket_metric test_mutex_metric test_posix_mutex_metric test_posix_spin_metric test_MCS_metric test_adaptive_metric
+test_yield_metric: $(TEST_NAME) library
+	$(CC) $(CFLAGSM) -D_YIELD -L$(DIR) $(TEST_NAME) -o metric_yield $(LIBRARY)
+test_metric: test_spin_metric test_ticket_metric test_mutex_metric test_posix_mutex_metric test_posix_spin_metric test_MCS_metric test_adaptive_metric test_yield_metric
 	@true
 
 #short output for parsing scripts
@@ -126,7 +136,9 @@ test_MCS_metric_s: $(TEST_NAME) library
 	$(CC) $(CFLAGSMS) -D_MCS_SPIN -L$(DIR) $(TEST_NAME) -o smetric_MCS $(LIBRARY)
 test_adaptive_metric_s: $(TEST_NAME) library
 	$(CC) $(CFLAGSMS) -D_ADAPTIVE -L$(DIR) $(TEST_NAME) -o smetric_adaptive $(LIBRARY)
-test_metric_s: test_spin_metric_s test_ticket_metric_s test_mutex_metric_s test_posix_mutex_metric_s test_posix_spin_metric_s test_MCS_metric_s test_adaptive_metric_s
+test_yield_metric_s: $(TEST_NAME) library
+	$(CC) $(CFLAGSMS) -D_YIELD -L$(DIR) $(TEST_NAME) -o smetric_yield $(LIBRARY)
+test_metric_s: test_spin_metric_s test_ticket_metric_s test_mutex_metric_s test_posix_mutex_metric_s test_posix_spin_metric_s test_MCS_metric_s test_adaptive_metric_s test_yield_metric_s
 	@true
 
 #everything

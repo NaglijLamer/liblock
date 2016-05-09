@@ -8,10 +8,10 @@
 
 #ifdef _SHORT_METRIC
 #define OUTPUT "%p\n%ld\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n"
-#define OUTPUT2 "%d %d %d\n"
+#define OUTPUT2 "%d %d %d\n%f\n%f\n%f\n"
 #else
 #define OUTPUT "Lock address: %p\nAmount of threads wanting to get lock: %ld\nAverage in critical section: %f\nAverage between two threads on lock: %f\nAverage waiting time: %f\nAverage waiting CPU time: %f\nLoading: %f\nAverage time in section+waitng: %f\nAverage queue: %f\nAverage amount of threads in section+waiting: %f\nPer thread locks:\n"
-#define OUTPUT2 "Linux TID: %d. Thread internal id on this lock: %d. Amount of attempt to get lock: %d\n"
+#define OUTPUT2 "Linux TID: %d. Thread internal id on this lock: %d. Amount of attempt to get lock: %d\n\tAverage in critical section: %f\n\tAverage waiting time: %f\n\tMax waiting time: %f\n"
 #endif
 
 int in_lock_info_test() __attribute__((constructor(101)));
@@ -36,8 +36,14 @@ int out_lock_info_test(){
                 double m = u / a;
                 double w_cpu = lock->__cpu_w / (lock->__N);
                 fprintf(stderr, OUTPUT, (void*)lock, lock->__N, b, a, w, w_cpu, y, u, l, m);
-                for (int j = 0; j < lock->__itid; j++)
-                        fprintf(stderr, OUTPUT2, lock->__content_thr[j].__tid, j, lock->__content_thr[j].__count);
+		//fprintf(stderr, "CPU in crit: %f\n", lock->__b_cpu / (lock->__N));
+		//fprintf(stderr, "Max time in critical section: %f\n", lock->__b_max);
+                for (int j = 0; j < lock->__itid; j++){
+			int count = lock->__content_thr[j].__count;
+			double w_thr = lock->__content_thr[j].__wait_time / count;
+			double b_thr = lock->__content_thr[j].__section_time / count;
+                        fprintf(stderr, OUTPUT2, lock->__content_thr[j].__tid, j, count, b_thr, w_thr, lock->__content_thr[j].__max_wait_time);
+		}
         }
         free(lock_address.lock);
         return 0;

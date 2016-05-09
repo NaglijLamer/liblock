@@ -48,8 +48,8 @@ int main (int argc, char *argv[]){
 	if (argc != 5) error("test_m:wrong amount of args");
 	if ((amount_thr = atoi(argv[1])) <= 0) error("test_m:wrong first arg");
 	if ((count = atoi(argv[2])) <= 0) error("test_m:wrong second arg");
-	if ((critical_section_iterarions = atoi(argv[3])) <= 0) error("test_m:wrong third arg");
-	if ((after_section_iterations = atoi(argv[4])) <= 0) error("test_m:wrong fourth arg");
+	if ((critical_section_iterarions = atoi(argv[3])) < 0) error("test_m:wrong third arg");
+	if ((after_section_iterations = atoi(argv[4])) < 0) error("test_m:wrong fourth arg");
 	/*fprintf(stderr, "1: %d, 2: %d, 3: %d\n", amount_thr, critical_section_iterarions, after_section_iterations);
 	return 0;*/
 	if (custom_lock_init(&lock, 0) != SUCCESS)

@@ -30,10 +30,15 @@
 #define ticket_spin_init ticket_spin_init_metric
 #define ticket_spinlock_t ticket_spinlock_metric_t
 
-#define adaptive_mutex_lock adaptive_mutex_metric
-#define adaptive_mutex_unlock pthread_mutex_unlock_metric
-#define adaptive_mutex_init pthread_mutex_init_metric
-#define adaptive_mutex_t pthread_mutex_metric_t
+#define adaptive_mutex_lock adaptive_mutex_lock_metric
+#define adaptive_mutex_unlock pthread_mutex_unlock_metric_c
+#define adaptive_mutex_init pthread_mutex_init_metric_c
+#define adaptive_mutex_t pthread_mutex_metric_t_c
+
+#define yield_mutex_lock pthread_mutex_lock_metric_c
+#define yield_mutex_unlock yield_mutex_unlock_metric
+#define yield_mutex_init pthread_mutex_init_metric_c
+#define yield_mutex_t pthread_mutex_metric_t_c
 
 #define MCS_spin_lock MCS_spin_lock_metric
 #define MCS_spin_unlock MCS_spin_unlock_metric
@@ -52,16 +57,21 @@
         #define custom_lock_unlock ticket_spin_unlock_metric
         #define custom_lock_init ticket_spin_init_metric
         //#define custom_lock ticket_spinlock_t
-#elif defined(_MUTEX) || defined (_ADAPTIVE)
+#elif defined(_MUTEX) || defined (_ADAPTIVE) || defined (_YIELD)
         #include "pthread_mutex_custom_metric.h"
         int temp_var_custom_lock_for_mutex_attr = 1;
         #ifdef _MUTEX
                 #define custom_lock_lock pthread_mutex_lock_metric_c
-        #else
+		#define custom_lock_unlock pthread_mutex_unlock_metric_c
+        #elif _ADAPTIVE
                 #include "adaptive_mutex_metric.h"
                 #define custom_lock_lock adaptive_mutex_lock_metric
+		#define custom_lock_unlock pthread_mutex_unlock_metric_c
+	#else 
+		#include "yield_mutex_metric.h"
+		#define custom_lock_lock pthread_mutex_lock_metric_c
+		#define custom_lock_unlock yield_mutex_unlock_metric
         #endif
-        #define custom_lock_unlock pthread_mutex_unlock_metric_c
         #define custom_lock_init(lock, attr) pthread_mutex_init_metric_c(lock, attr == 1 ? (void*)(&temp_var_custom_lock_for_mutex_attr) : NULL)
         //#define custom_lock pthread_mutex_t_c
 #elif defined _MCS_SPIN

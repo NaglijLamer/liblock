@@ -15,16 +15,21 @@
 	#define custom_lock_unlock ticket_spin_unlock
 	#define custom_lock_init ticket_spin_init
 	#define custom_lock ticket_spinlock_t
-#elif defined(_MUTEX) || defined (_ADAPTIVE)
+#elif defined(_MUTEX) || defined (_ADAPTIVE) || defined (_YIELD)
 	#include "pthread_mutex_custom.h"
 	int temp_var_custom_lock_for_mutex_attr = 1;
 	#ifdef _MUTEX
 		#define custom_lock_lock pthread_mutex_lock_c
-	#else
+		#define custom_lock_unlock pthread_mutex_unlock_c
+	#elif defined _ADAPTIVE
 		#include "adaptive_mutex.h"
 		#define custom_lock_lock adaptive_mutex_lock
+		#define custom_lock_unlock pthread_mutex_unlock_c
+	#else
+		#include "yield_mutex.h"
+		#define custom_lock_lock pthread_mutex_lock_c
+		#define custom_lock_unlock yield_mutex_unlock
 	#endif
-	#define custom_lock_unlock pthread_mutex_unlock_c
 	#define custom_lock_init(lock, attr) pthread_mutex_init_c(lock, attr == 1 ? (void*)(&temp_var_custom_lock_for_mutex_attr) : NULL)
 	#define custom_lock pthread_mutex_t_c
 #elif defined _MCS_SPIN
