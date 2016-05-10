@@ -62,6 +62,7 @@ int pthread_mutex_unlock_metric_c(pthread_mutex_metric_t_c *lock){
 	: "=m" (*lock)
 	: "m" (*lock), "D" (lock)
 	: "cx", "r11", "cc", "memory");
+	METRIC_AFTER_UNLOCK(lock);
 	return 0;
 }
 

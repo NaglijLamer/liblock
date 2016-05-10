@@ -25,6 +25,7 @@ int ticket_spin_unlock_metric(ticket_spinlock_metric_t *lock){
 	//"movl $1, %0\n\t"
 	//: "=m" (*lock)
 	//: "m" (*lock));
+	METRIC_AFTER_UNLOCK(lock);
 	return 0;
 }
 

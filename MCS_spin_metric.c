@@ -65,6 +65,7 @@ int MCS_spin_unlock_metric(MCS_lock_metric_t *lock){
 	: "rax");
 	/*printf("%s", "realize lock\n");
 	fflush(stdout);*/
+	METRIC_AFTER_UNLOCK(lock);
 	return 0;
 }
 

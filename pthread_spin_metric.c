@@ -13,7 +13,10 @@ int pthread_spin_lock_metric(pthread_spinlock_metric_t *lock){
 int pthread_spin_unlock_metric(pthread_spinlock_metric_t *lock){
 	METRIC_BEFORE_UNLOCK(lock);
 	
-	return pthread_spin_unlock(lock->spinlock_for_posix);
+	int res = pthread_spin_unlock(lock->spinlock_for_posix);
+
+	METRIC_AFTER_UNLOCK(lock);
+	return res;
 }
 
 int pthread_spin_init_metric(pthread_spinlock_metric_t *lock, int ignore){

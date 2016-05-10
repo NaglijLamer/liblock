@@ -29,6 +29,7 @@ int pthread_spin_unlock_metric_c(pthread_spinlock_metric_t_c *lock){
 	"movl $1, %0\n\t"
 	: "=m" (*lock)
 	: "m" (*lock));
+	METRIC_AFTER_UNLOCK(lock);
 	return 0;
 }
 

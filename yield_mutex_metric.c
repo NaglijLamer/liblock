@@ -40,6 +40,7 @@ int yield_mutex_unlock_metric(pthread_mutex_metric_t_c *lock){
 	sched_setparam(0, &sch);
 	syscall(SYS_sched_yield);*/
 	//usleep(0);
+	METRIC_AFTER_UNLOCK(lock);
 	return 0;
 
 }
