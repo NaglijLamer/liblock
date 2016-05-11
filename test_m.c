@@ -40,7 +40,7 @@ void *thread_function(){
 		//usleep(0);
                 if (custom_lock_unlock(&lock) != SUCCESS)
                         error("test_m:custom_lock_unlock");
-		if (count <= 0) return NULL;
+		if (count <= 0) {printf("%f\n", res); return NULL;}
 		m = 1.0;
 		for (int i = 1; i < after_section_iterations; i++)
                         m *= i;

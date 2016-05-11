@@ -9,10 +9,11 @@
 #include <sys/ioctl.h>
 #include <linux/perf_event.h>
 #include <string.h>
+#include <locale.h>
 #include "metrics.h"
 
 #ifdef _SHORT_METRIC
-#define OUTPUT "%p\n%ld\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n"
+#define OUTPUT "%p\n%'ld\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n"
 #define OUTPUT2 "%d %d %d\n%f\n%f\n%f\n"
 #else
 #define OUTPUT "Lock address: %p\nAmount of threads wanting to get lock: %ld\nAverage in critical section: %f\nAverage between two threads on lock: %f\nAverage waiting time: %f\nAverage waiting CPU time: %f\nLoading: %f\nAverage time in section+waitng: %f\nAverage queue: %f\nAverage amount of threads in section+waiting: %f\nPer thread locks:\n"
@@ -69,17 +70,17 @@ int in_lock_info_test(){
 int out_lock_info_test(){
 
 	long long count1, count2, count3/*, count4, count5*/;
-	int ignore;
 	ioctl(lock_address.fd1, PERF_EVENT_IOC_DISABLE, 0);
 	ioctl(lock_address.fd2, PERF_EVENT_IOC_DISABLE, 0);
 	ioctl(lock_address.fd3, PERF_EVENT_IOC_DISABLE, 0);
-	ignore = read(lock_address.fd1, &count1, sizeof(long long));
+	if (read(lock_address.fd1, &count1, sizeof(long long)) < 0) exit(0);
 	//count2 = 0;
-	ignore = read(lock_address.fd2, &count2, sizeof(long long));
-	ignore = read(lock_address.fd3, &count3, sizeof(long long));
+	if (read(lock_address.fd2, &count2, sizeof(long long)) < 0) exit(0);
+	if (read(lock_address.fd3, &count3, sizeof(long long)) < 0) exit(0);
 	/*ignore = read(lock_address.fd4, &count4, sizeof(long long));
 	ignore = read(lock_address.fd5, &count5, sizeof(long long));*/
-
+	setlocale(LC_NUMERIC, "");
+	fprintf(stderr, "Total branches %'lld, missing branches without kernel %'lld and with kernel %'lld\n", count1, count2, count3);
         for (int i = 0; i < lock_address.count; i++){
                 custom_lock *lock = (custom_lock*)(lock_address.lock[i]);
                 double a = (lock->__temp_a - lock->__start_a) / (lock->__N);
@@ -90,13 +91,12 @@ int out_lock_info_test(){
                 double l = w / a;
                 double m = u / a;
                 double w_cpu = lock->__cpu_w / (lock->__N);
-                fprintf(stderr, OUTPUT, (void*)lock, lock->__N, b, a, w, w_cpu, y, u, l, m);
 		struct rusage test;
 		getrusage(RUSAGE_SELF, &test);
-		fprintf(stderr, "Before quanta %ld, cause of quanta %ld\n", test.ru_nvcsw, test.ru_nivcsw);
-		fprintf(stderr, "Total branches %lld, missing branches without kernel %lld and with kernel %lld\n", count1, count2, count3);
-		fprintf(stderr, "Branch-missing in waiting lock: %lld, branch-missing in critical: %lld, branch-missing out: %lld, branch_missing unlock: %lld\n", lock->__br_l, lock->__br_cr, lock->__br_out, lock->__br_ul);
-		//fprintf(stderr, "CPU in crit: %f\n", lock->__b_cpu / (lock->__N));
+		fprintf(stderr, "Before quanta %'ld, cause of quanta %'ld\n", test.ru_nvcsw, test.ru_nivcsw);
+		fprintf(stderr, "Branch-missing in waiting lock: %'lld, branch-missing in critical: %'lld, branch-missing out: %'lld, branch_missing unlock: %'lld\n", lock->__br_l, lock->__br_cr, lock->__br_out, lock->__br_ul);
+                fprintf(stderr, OUTPUT, (void*)lock, lock->__N, b, a, w, w_cpu, y, u, l, m);
+				//fprintf(stderr, "CPU in crit: %f\n", lock->__b_cpu / (lock->__N));
 		//fprintf(stderr, "Max time in critical section: %f\n", lock->__b_max);
                 for (int j = 0; j < lock->__itid; j++){
 			int count = lock->__content_thr[j].__count;

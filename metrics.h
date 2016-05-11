@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
 #include "common_defs.h"
@@ -99,10 +100,9 @@ typedef volatile struct{
 	\
 	int *n;\
 	if ((n = pthread_getspecific((lock)->__key)) != NULL){\
-		int ignore; \
 		long long count;\
 		ioctl((lock)->__content_thr[*n].__fd_out, PERF_EVENT_IOC_DISABLE, 0);\
-		ignore = read((lock)->__content_thr[*n].__fd_out, &count, sizeof(long long));\
+		if (read((lock)->__content_thr[*n].__fd_out, &count, sizeof(long long)) < 0) exit(1);\
 		(lock)->__br_out += count;\
 		ioctl((lock)->__content_thr[*n].__fd_l, PERF_EVENT_IOC_RESET, 0);\
 		ioctl((lock)->__content_thr[*n].__fd_l, PERF_EVENT_IOC_ENABLE, 0);\
@@ -122,19 +122,19 @@ typedef volatile struct{
 		(lock)->__content_thr[*n].__tid = syscall(SYS_gettid);\
 		(lock)->__content_thr[*n].__count = 0;\
 		\
-		struct perf_event_attr pe1, pe2, pe3;\
+		struct perf_event_attr pe1/*, pe2, pe3*/;\
 		memset(&pe1, 0, sizeof(struct perf_event_attr));\
-		memset(&pe2, 0, sizeof(struct perf_event_attr));\
-		memset(&pe3, 0, sizeof(struct perf_event_attr));\
-		pe1.type = pe2.type = pe3.type = PERF_TYPE_HARDWARE;\
-		pe1.size = pe2.size = pe3.size = sizeof(struct perf_event_attr);\
+		/*memset(&pe2, 0, sizeof(struct perf_event_attr));*/\
+		/*memset(&pe3, 0, sizeof(struct perf_event_attr));*/\
+		pe1.type /*= pe2.type = pe3.type*/ = PERF_TYPE_HARDWARE;\
+		pe1.size /*= pe2.size = pe3.size*/ = sizeof(struct perf_event_attr);\
 		/*pe1.config = pe2.config = pe3.config = PERF_COUNT_HW_BRANCH_INSTRUCTIONS;*/\
-		pe1.config = pe2.config = pe3.config = PERF_COUNT_HW_BRANCH_MISSES;\
-		pe1.disabled = pe2.disabled = pe3.disabled = 1;\
+		pe1.config /*= pe2.config = pe3.config*/ = PERF_COUNT_HW_BRANCH_MISSES;\
+		pe1.disabled /*= pe2.disabled = pe3.disabled*/ = 1;\
 		(lock)->__content_thr[*n].__fd_cr = syscall(__NR_perf_event_open, &pe1, (lock)->__content_thr[*n].__tid, -1, -1, 0);\
-		(lock)->__content_thr[*n].__fd_l = syscall(__NR_perf_event_open, &pe2, (lock)->__content_thr[*n].__tid, -1, -1, 0);\
-		(lock)->__content_thr[*n].__fd_out = syscall(__NR_perf_event_open, &pe3, (lock)->__content_thr[*n].__tid, -1, -1, 0);\
-		(lock)->__content_thr[*n].__fd_ul = syscall(__NR_perf_event_open, &pe3, (lock)->__content_thr[*n].__tid, -1, -1, 0);\
+		(lock)->__content_thr[*n].__fd_l = syscall(__NR_perf_event_open, &pe1, (lock)->__content_thr[*n].__tid, -1, -1, 0);\
+		(lock)->__content_thr[*n].__fd_out = syscall(__NR_perf_event_open, &pe1, (lock)->__content_thr[*n].__tid, -1, -1, 0);\
+		(lock)->__content_thr[*n].__fd_ul = syscall(__NR_perf_event_open, &pe1, (lock)->__content_thr[*n].__tid, -1, -1, 0);\
 		ioctl((lock)->__content_thr[*n].__fd_l, PERF_EVENT_IOC_RESET, 0);\
 		ioctl((lock)->__content_thr[*n].__fd_cr, PERF_EVENT_IOC_RESET, 0);\
 		ioctl((lock)->__content_thr[*n].__fd_out, PERF_EVENT_IOC_RESET, 0);\
@@ -143,10 +143,9 @@ typedef volatile struct{
 		/*(lock)->__content_thr[*n].__core = sched_getcpu();*/\
 	}\
 	\
-	int ignore; \
 	long long count;\
 	ioctl((lock)->__content_thr[*n].__fd_l, PERF_EVENT_IOC_DISABLE, 0);\
-	ignore = read((lock)->__content_thr[*n].__fd_l, &count, sizeof(long long));\
+	if (read((lock)->__content_thr[*n].__fd_l, &count, sizeof(long long)) < 0) exit(1);\
 	(lock)->__br_l += count;\
 	\
 	(lock)->__N++;\
@@ -250,12 +249,12 @@ typedef volatile struct{
 #define METRIC_BEFORE_UNLOCK(lock) ({\
 	struct timespec __temp/*, __temp_time_cpu*/;\
 	\
-	int ignore;\
 	long long count;\
 	int *n = (int*)pthread_getspecific((lock)->__key);\
 	ioctl((lock)->__content_thr[*n].__fd_cr, PERF_EVENT_IOC_DISABLE, 0);\
-	ignore = read((lock)->__content_thr[*n].__fd_cr, &count, sizeof(long long));\
+	if (read((lock)->__content_thr[*n].__fd_cr, &count, sizeof(long long)) < 0) exit(1);\
 	(lock)->__br_cr += count;\
+	/*fprintf(stdout, "%lld\n", count);*/\
 	\
         clock_gettime(CLOCK_MONOTONIC, &__temp);\
 	/*clock_gettime(CLOCK_THREAD_CPUTIME_ID, &__temp_time_cpu);*/\
@@ -280,11 +279,10 @@ typedef volatile struct{
 
 #define METRIC_AFTER_UNLOCK(lock)({\
 	\
-	int ignore;\
 	long long count;\
 	int *n = (int*)pthread_getspecific((lock)->__key);\
 	ioctl((lock)->__content_thr[*n].__fd_ul, PERF_EVENT_IOC_DISABLE, 0);\
-	ignore = read((lock)->__content_thr[*n].__fd_ul, &count, sizeof(long long));\
+	if (read((lock)->__content_thr[*n].__fd_ul, &count, sizeof(long long)) < 0) exit(1);\
 	(lock)->__br_ul += count;\
 	ioctl((lock)->__content_thr[*n].__fd_out, PERF_EVENT_IOC_RESET, 0);\
 	ioctl((lock)->__content_thr[*n].__fd_out, PERF_EVENT_IOC_ENABLE, 0);\
