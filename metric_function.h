@@ -94,7 +94,7 @@ int out_lock_info_test(){
 		struct rusage test;
 		getrusage(RUSAGE_SELF, &test);
 		fprintf(stderr, "Before quanta %'ld, cause of quanta %'ld\n", test.ru_nvcsw, test.ru_nivcsw);
-		fprintf(stderr, "Branch-missing in waiting lock: %'lld, branch-missing in critical: %'lld, branch-missing out: %'lld, branch_missing unlock: %'lld\n", lock->__br_l, lock->__br_cr, lock->__br_out, lock->__br_ul);
+		fprintf(stderr, "Branch-missing in waiting lock: %'lld, branch-missing in critical: %'lld, branch-missing out: %'lld, branch_missing unlock: %'lld\n", (long long)0, (long long)0, (long long)0, (long long)0);
                 fprintf(stderr, OUTPUT, (void*)lock, lock->__N, b, a, w, w_cpu, y, u, l, m);
 				//fprintf(stderr, "CPU in crit: %f\n", lock->__b_cpu / (lock->__N));
 		//fprintf(stderr, "Max time in critical section: %f\n", lock->__b_max);
